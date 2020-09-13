@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.1/js/bootstrap.min.js"></script>
+
+<!------ Include the above in your HEAD tag ---------->
+<style type="text/css">
+   .animated {
+    -webkit-transition: height 0.2s;
+    -moz-transition: height 0.2s;
+    transition: height 0.2s;
+}
+
+.stars
+{
+    margin: 20px 0;
+    font-size: 24px;
+    color: #d17581;
+}
+</style>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12 col-md-10 col-md-offset-1">
+          {% for i in Data %}
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="col-sm-8 col-md-6">
+                        <div class="media">
+                            <a class="thumbnail pull-left" href="#"> <img class="media-object" src="/media/{{ i.image }}" style="width: 200px; height: 200px;"> </a>
+                            <div class="media-body">
+                                <h4 class="media-heading"><a href="#">{{ i.name }}</a></h4>
+                                <h5 class="media-heading"> by <a href="#">Brand name</a></h5>
+                                <span>Status: </span><span class="text-success"><strong>In Stock</strong></span>
+                            </div>
+                        </div></td>
+                        <td class="col-sm-2 col-md-2" style="text-align: center">
+                        <input type="hidden" id="custId" name="custId" value="{{ i.id }}">
+                        <input type="text" class="form-control" value="{{ i.price }}"readonly>
+                        </td>
+                        <td>
+                          {{ i.description }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+        </div>
+    </div>
+</div>
+<div class="container">
+<div class="row" style="margin-top:40px;">
+  <div class="col-md-6">
+    <div class="well well-sm">
+          <div class="text-right">
+              <textarea class="form-control animated" cols="50" id="new-review" name="comment" placeholder="Enter your review here..." rows="5"></textarea>
+              <label for="rating">Rating:</label>
+                <select name="review-rating" id="review-id">
+                  <option value="0">Select</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                </select>
+              <button class="btn btn-success btn-lg" id="submit-review" type="submit">Save</button>
+          </div>
+      </div>       
+  </div>
+</div>
+</div>
+{% endfor %}
+<script type="text/javascript">
+$('#submit-review').click(function(){
+  console.log("rating",$("#review-id").val());
+  var token = "{{csrf_token}}";
+  $.ajax({
+  url: "{% url 'review_submission' %}",
+  type: "POST",
+  headers: { "X-CSRFToken": token },
+  data: {
+    "text": $('textarea#new-review').val(),
+    "rating":$("#review-id").val(),
+    "product_id":$('#custId').val(),
+  },
+  dataType: "json",
+  success: function (data) {
+    alert(data.msg);
+   },
+   error: function(data){
+    console.log(data);
+   }
+});
+
+})
+
+</script>
+{% endblock content %}
