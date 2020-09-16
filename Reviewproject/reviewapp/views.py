@@ -101,7 +101,7 @@ class evaluation_of_review(APIView):
 
 	# authentication_classes = (TokenAuthentication,)
 	# permission_classes = (IsAuthenticated,)
-
+	###### Start the evaluation process
 	def get(self,request):
 		review_list = [0,1,2,3,4,5]
 		result_count = {}
@@ -130,15 +130,67 @@ class evaluation_of_review(APIView):
 
 				unique_product_list = list(set(product_id_list))
 				for i in unique_product_list:
-					save_format_string = RatingEvaluationString.objects.create(product_item_id=i,string_review="".join(unformatted_list),fromat_string_review="".join(string_list))
+					save_format_string = RatingEvaluationString.objects.create(product_item_id=i,string_review="".join(unformatted_list))
 					save_format_string.save()
 				qs.update(calculated_review=True)
-				result_count["rating_result"] = "".join(unformatted_list)
-				result_count["formatted_rating_result"] = "".join(string_list)
+				for i in range(0, len(unformatted_list)):
+					unformatted_list[i] = int(unformatted_list[i])
+				format_string = start_processing(unformatted_list)
+				
+				result_count["rating_result"] = unformatted_list
+				result_count["formatted_result"] = format_string
 			return Response(result_count)
 		else:
 			result_count['error'] = "Mininmum requirement of review and product should be there for evaluation"
 			return Response(result_count)
+
+
+def start_processing(input_list):
+    result = ''
+    temp = []
+    for e in input_list:
+        if e == 0:
+            if temp:
+                result += create_review_string(temp) + str(0)
+                temp = []
+            else:
+                result += str(0)
+        else:
+            temp.append(e)
+    
+    if temp:
+        result += create_review_string(temp)
+    
+    return result
+
+def create_review_string(input_list):
+    m = max(input_list)
+    revstr = '('*m + ')'*m
+    revlist = list(revstr)
+    last_position=0
+    
+    flag = True
+    for i in range(0,len(input_list)):
+        if flag:
+            e = input_list[i]
+            revlist.insert(e,e)
+            last_position = e
+            flag = False
+
+        else:
+            if input_list[i] == input_list[i-1]:
+                revlist.insert(last_position+1, input_list[i])
+                last_position=last_position+1
+            else:
+                diff = input_list[i] - input_list[i-1]
+                if diff < 0:
+                    last_position += -(diff) + 1
+                    revlist.insert(last_position, input_list[i])
+                else:
+                    last_position += diff + 1
+                    revlist.insert(last_position,input_list[i])
+    
+    return ''.join([str(o) for o in revlist])
 
 
 
